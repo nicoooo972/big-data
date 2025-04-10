@@ -30,7 +30,7 @@ object Main extends App {
 
   // Écriture des données dans un bucket S3
   private def fileUploader(): Unit = {
-    val url = "s3a://spark/yellow_tripdata_2024-10v2.parquet" // URL du bucket S3 avec le nom du fichier
+    val url = "s3a://spark/yellow_tripdata_2024-10v3.parquet" // URL du bucket S3 avec le nom du fichier
     parquetFile.write.mode("overwrite").parquet(url)
     println(s"Les données ont été écrites dans le bucket : $url")
   }
