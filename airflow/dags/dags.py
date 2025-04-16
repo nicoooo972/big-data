@@ -10,21 +10,21 @@ import urllib.error
 
 
 def download_parquet(**kwargs):
-    folder_path: str = r'..\..\data\raw'
-    # Construct the relative path to the folder
+    folder_path: str = '/tmp/data/raw'
+    os.makedirs(folder_path, exist_ok=True)
     url: str = "https://d37ci6vzurychx.cloudfront.net/trip-data/"
     filename: str = "yellow_tripdata"
     extension: str = ".parquet"
-
-    month: str = pendulum.now().subtract(months=3).format('YYYY-MM')
-
-    # Download the file
-    file_url: str = url + filename + '_' + month + extension
-    try:
-        urllib.request.urlretrieve(file_url, folder_path)
-        print(f"Le fichier a été técharger avec succès")
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"Failed to download the parquet file : {str(e)}") from e
+    start = pendulum.datetime(2025, 1, 1)
+    for i in range(3):
+        month = start.subtract(months=i).format('YYYY-MM')
+        file_url = url + filename + '_' + month + extension
+        local_file = os.path.join(folder_path, f"yellow_tripdata_{month}.parquet")
+        try:
+            urllib.request.urlretrieve(file_url, local_file)
+            print(f"Le fichier a été téléchargé avec succès dans {local_file}")
+        except urllib.error.URLError as e:
+            print(f"Failed to download {file_url}: {str(e)}")
 
 
 # Python Function
@@ -42,20 +42,19 @@ def upload_file(**kwargs):
     bucket: str = 'spark'
     filename: str = "yellow_tripdata"
     extension: str = ".parquet"
-    month: str = pendulum.now().subtract(months=3).format('YYYY-MM')
-
-    bucket_file_url = bucket + filename + month + extension
-    object_name = filename + month + extension
-
-    print(client.list_buckets())
-
-    client.fput_object(
-        bucket_name=bucket,
-        object_name=object_name,
-        file_path="s3a://spark/")
-    # On supprime le fichié récement téléchargés, pour éviter la redondance. On suppose qu'en arrivant ici, l'ajout est
-    # bien réalisé
-    os.remove(os.path.join("./", "yellow_tripdata_" + month + ".parquet"))
+    start = pendulum.datetime(2025, 1, 1)
+    for i in range(3):
+        month = start.subtract(months=i).format('YYYY-MM')
+        object_name = filename + month + extension
+        local_file = os.path.join("/tmp/data/raw", f"yellow_tripdata_{month}.parquet")
+        if os.path.exists(local_file):
+            client.fput_object(
+                bucket_name=bucket,
+                object_name=object_name,
+                file_path=local_file)
+            os.remove(local_file)
+        else:
+            print(f"File {local_file} does not exist, skipping upload.")
 
 
 ###############################################
