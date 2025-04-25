@@ -4,7 +4,7 @@ from airflow.utils.dates import days_ago
 from minio import Minio
 import os
 import pendulum
-import pandas as pd
+import polars as pl
 import sqlalchemy
 
 def download_from_minio(**kwargs):
@@ -28,11 +28,11 @@ def download_from_minio(**kwargs):
 
 def insert_into_postgres(**kwargs):
     local_files = kwargs['ti'].xcom_pull(key='local_files')
-    engine = sqlalchemy.create_engine('postgresql://postgres:admin@data-warehouse:5432/taxi')
+    connection_uri = 'postgresql://postgres:admin@data-warehouse:5432/taxi'
     for local_file in local_files:
-        df = pd.read_parquet(local_file)
-        df.columns = df.columns.str.lower()
-        df.to_sql('yellow_tripdata', engine, if_exists='append', index=False)
+        df = pl.read_parquet(local_file)
+        df = df.rename({col: col.lower() for col in df.columns})
+        df.write_database(table_name='yellow_tripdata', connection=connection_uri, if_exists='append')
         os.remove(local_file)
 
 with DAG(dag_id='Minio_to_Postgres',
