@@ -128,9 +128,14 @@ def migrate_dim_date(**kwargs):
 
 
 def migrate_fact_trips(**kwargs):
+    print("Starting migrate_fact_trips...") # Ou simplement print()
+
+    print("Reading source data...")
     df = pl.read_database_uri(query='SELECT * FROM yellow_tripdata', uri=SRC_CONN)
     df = df.rename({col: col.lower() for col in df.columns})
+    print(f"Read {df.height} rows from source.")
 
+    print("Reading dimension tables...")
     dim_vendor = pl.read_database_uri(query='SELECT vendor_key, vendor_id FROM dim_vendor', uri=DST_CONN)
     dim_rate_code = pl.read_database_uri(query='SELECT rate_code_key, rate_code_id FROM dim_rate_code', uri=DST_CONN)
     dim_payment_type = pl.read_database_uri(query='SELECT payment_type_key, payment_type_id FROM dim_payment_type', uri=DST_CONN)
@@ -138,7 +143,9 @@ def migrate_fact_trips(**kwargs):
     dim_date = pl.read_database_uri(query='SELECT date_key, full_date FROM dim_date', uri=DST_CONN).with_columns(
         pl.col('full_date').cast(pl.Date)
     )
+    print("Finished reading dimension tables.")
 
+    print("Performing transformations and joins...")
     df = df.with_columns([
         pl.col('tpep_pickup_datetime').cast(pl.Datetime).dt.date().alias('pickup_date'),
         pl.col('tpep_dropoff_datetime').cast(pl.Datetime).dt.date().alias('dropoff_date')
@@ -151,12 +158,13 @@ def migrate_fact_trips(**kwargs):
     df = df.join(dim_location.rename({'location_key': 'dropoff_location_key'}), left_on='dolocationid', right_on='location_id', how='left')
     df = df.join(dim_date.rename({'date_key': 'pickup_date_key'}), left_on='pickup_date', right_on='full_date', how='left')
     df = df.join(dim_date.rename({'date_key': 'dropoff_date_key'}), left_on='dropoff_date', right_on='full_date', how='left')
+    print("Finished joins.")
 
+    print("Calculating trip duration...")
     # Calculate duration (original calculation)
     df = df.with_columns(
         (pl.col('tpep_dropoff_datetime') - pl.col('tpep_pickup_datetime')).alias('trip_duration_temp')
     )
-
     # Convert duration to 'X seconds' string format for PostgreSQL INTERVAL type
     df = df.with_columns(
         (
@@ -164,6 +172,7 @@ def migrate_fact_trips(**kwargs):
             + pl.lit(" seconds")
         ).alias("trip_duration")
     ).drop("trip_duration_temp")
+    print("Finished calculating trip duration.")
 
     fact_cols = [
         'vendor_key',
@@ -194,18 +203,29 @@ def migrate_fact_trips(**kwargs):
     else:
          df = df.with_columns(pl.lit(None).cast(pl.Float64).alias('passenger_count'))
 
-    if 'airport_fee' not in df.columns:
-         fact_cols.remove('Airport_fee')
-    elif 'Airport_fee' in fact_cols:
-         fact_cols[fact_cols.index('Airport_fee')] = 'airport_fee'
+    if 'airport_fee' not in df.columns and 'airport_fee' in fact_cols:
+         print("'airport_fee' column not found in source, removing from fact_cols.")
+         fact_cols.remove('airport_fee') # Adjusted logic slightly for safety
+    # elif 'Airport_fee' in fact_cols: # Original check was case sensitive, assuming lowercase now
+    #      fact_cols[fact_cols.index('Airport_fee')] = 'airport_fee'
 
+    print("Selecting final columns...")
     df_final = df.select(fact_cols)
+    print(f"Final DataFrame shape: {df_final.shape}")
 
+    print("Writing data to fact_trips...")
     engine = sqlalchemy.create_engine(DST_CONN)
     try:
-        df_final.write_database(table_name='fact_trips', connection=engine, if_table_exists='append')
+        num_rows = df_final.write_database(table_name='fact_trips', connection=engine, if_table_exists='append')
+        print(f"Successfully wrote {num_rows if num_rows is not None else 'unknown number of'} rows to fact_trips.") # write_database renvoie le nombre de lignes affectées
+    except Exception as e:
+        print(f"Error writing to database: {e}") # log.error(f"Error writing to database: {e}")
+        raise # Re-lancer l'exception pour qu'Airflow marque la tâche comme échouée
     finally:
         engine.dispose()
+        print("Database connection disposed.")
+
+    print("Finished migrate_fact_trips.")
 
 
 def truncate_source_table(**kwargs):
@@ -249,8 +269,5 @@ with DAG(
         task_id='migrate_fact_trips',
         python_callable=migrate_fact_trips
     )
-    t7 = PythonOperator(
-        task_id='truncate_source_table',
-        python_callable=truncate_source_table
-    )
-    [t1, t2, t3, t4, t5] >> t6 >> t7 
+
+    [t1, t2, t3, t4, t5] >> t6
