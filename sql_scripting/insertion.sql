@@ -29,11 +29,7 @@ SELECT DISTINCT location_id FROM (
     SELECT "DOLocationID" as location_id FROM dblink('postgresql://postgres:admin@data-warehouse:5432/taxi', 'SELECT "DOLocationID" FROM yellow_tripdata') AS t2("DOLocationID" INT) WHERE "DOLocationID" IS NOT NULL
 ) all_locations
 ON CONFLICT (location_id) DO NOTHING;
--- NOTE: You would ideally perform an UPDATE here after inserting,
--- joining with your taxi zone lookup table to fill in borough, zone etc.
--- e.g. UPDATE dim_location SET borough = l.borough, zone = l.zone FROM lookup_table l WHERE dim_location.location_id = l.locationid;
 
--- Populate dim_date (Dynamically for dates present in the data)
 INSERT INTO dim_date (full_date, year, month, day, day_of_week, day_name, month_name, quarter, is_weekend)
 SELECT
     datum AS full_date,

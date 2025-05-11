@@ -12,8 +12,8 @@ object Main extends App {
     .builder()
     .appName("Data Integration")
     .master("local[*]")
-    .config("fs.s3a.access.key", "t8zVFrnzZgkxvWOSGeTO") // Clé d'accès S3
-    .config("fs.s3a.secret.key", "XL41XtFcgyhytMeFDyaUEitBXztu7BGy8tGwNy4u") // Clé secrète S3
+    .config("fs.s3a.access.key", "eHoxMB4Zdklb5rsqfXWp") // Clé d'accès S3
+    .config("fs.s3a.secret.key", "fmSPppV2WlokBEfqdKdULQ2MtyFL0U8vXtpkLr6O") // Clé secrète S3
     .config("fs.s3a.endpoint", "http://localhost:9000/")
     .config("fs.s3a.path.style.access", "true")
     .config("fs.s3a.connection.ssl.enable", "false")
@@ -26,8 +26,8 @@ object Main extends App {
 
 
   // spark.implicits._
-  private val s3a_path = "s3a://spark/yellow_tripdata_2024-10.parquet"
-  val df = spark.read.parquet(s3a_path)
+  private val s3a_path = "s3a://spark/*.parquet"
+  val df = spark.read.option("mergeSchema", "true").parquet(s3a_path)
   println("Fichier Parquet lu avec succès depuis S3.")
 
   df.show(5)
@@ -46,6 +46,5 @@ object Main extends App {
   println(s"Données écrites avec succès dans la table PostgreSQL : $targetTable")
 
   spark.stop()
-
 
 }

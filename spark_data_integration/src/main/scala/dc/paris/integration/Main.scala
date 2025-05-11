@@ -4,14 +4,13 @@ import org.apache.spark.sql.SparkSession
 import java.io.File
 
 object Main extends App {
-  // Initialisation de SparkSession
   val spark: SparkSession = SparkSession
     .builder()
     .appName("Data Integration")
     .master("local[*]")
-    .config("fs.s3a.access.key", "t8zVFrnzZgkxvWOSGeTO") // Clé d'accès S3
-    .config("fs.s3a.secret.key", "XL41XtFcgyhytMeFDyaUEitBXztu7BGy8tGwNy4u") // Clé secrète S3
-    .config("fs.s3a.endpoint", "http://localhost:9000/") // Endpoint S3
+    .config("fs.s3a.access.key", "eHoxMB4Zdklb5rsqfXWp")
+    .config("fs.s3a.secret.key", "fmSPppV2WlokBEfqdKdULQ2MtyFL0U8vXtpkLr6O")
+    .config("fs.s3a.endpoint", "http://localhost:9000/")
     .config("fs.s3a.path.style.access", "true")
     .config("fs.s3a.connection.ssl.enable", "false")
     .config("fs.s3a.attempts.maximum", "1")
@@ -19,22 +18,42 @@ object Main extends App {
     .config("fs.s3a.connection.timeout", "5000")
     .getOrCreate()
 
-  // Chemin absolu vers le fichier Parquet
-  private val parquetFilePath = new File("../data/raw/yellow_tripdata_2024-10.parquet").getAbsolutePath
-  private val parquetFile = spark.read.parquet(parquetFilePath)
+  val parquetDirectoryPath = "s3a://spark/"
+  val localRawDataPath = "../data/raw/"
 
-  // Création d'une vue temporaire et interrogation SQL
-  parquetFile.createOrReplaceTempView("parquet")
-  private val test = spark.sql("SELECT * FROM parquet")
-  test.show(10) // Affiche seulement les 10 premières lignes
+  println(s"Début du processus de téléversement des fichiers locaux de '$localRawDataPath' vers S3 '$parquetDirectoryPath'.")
+  val localDir = new File(localRawDataPath)
 
-  // Écriture des données dans un bucket S3
-  private def fileUploader(): Unit = {
-    val url = "s3a://spark/yellow_tripdata_2024-10v3.parquet" // URL du bucket S3 avec le nom du fichier
-    parquetFile.write.mode("overwrite").parquet(url)
-    println(s"Les données ont été écrites dans le bucket : $url")
+  if (localDir.exists && localDir.isDirectory) {
+    val localParquetFiles = localDir.listFiles().filter(file => file.isFile && file.getName.endsWith(".parquet"))
+
+    if (localParquetFiles.isEmpty) {
+      println(s"Aucun fichier Parquet trouvé dans le dossier local : $localRawDataPath pour le téléversement.")
+    } else {
+      println(s"Téléversement de ${localParquetFiles.length} fichiers Parquet locaux vers S3 ($parquetDirectoryPath)...")
+      localParquetFiles.foreach { file =>
+        val localFilePath = file.getAbsolutePath
+        val fileName = file.getName
+        val s3DestinationPath = s"$parquetDirectoryPath$fileName"
+        println(s"Traitement et téléversement du fichier local : $localFilePath vers $s3DestinationPath")
+
+        try {
+          val localDf = spark.read.parquet(localFilePath)
+          localDf.write.mode("overwrite").parquet(s3DestinationPath)
+          println(s"Fichier $fileName téléversé avec succès vers $s3DestinationPath")
+        } catch {
+          case e: Exception =>
+            println(s"Erreur lors du téléversement du fichier $fileName vers S3: ${e.getMessage}")
+        }
+      }
+      println("Tous les fichiers Parquet locaux spécifiés ont été traités pour le téléversement vers S3.")
+    }
+  } else {
+    println(s"Le dossier source local spécifié ('$localRawDataPath', résolu en '${localDir.getAbsolutePath}') n'existe pas ou n'est pas un dossier.")
   }
+  println("Fin du processus de téléversement.")
+  println("-" * 50)
 
-  // Exécution de l'upload
-  fileUploader()
+  println("Arrêt de la session Spark.")
+  spark.stop()
 }

@@ -13,7 +13,7 @@ with DAG(
     # Trigger DAG 1 - Download data
     trigger_dag1 = TriggerDagRunOperator(
         task_id='trigger_download_data',
-        trigger_dag_id='download_yellow_taxi_data',
+        trigger_dag_id='Grab_NYC_Data_to_Minio',
         wait_for_completion=True,
         poke_interval=60
     )
@@ -21,7 +21,7 @@ with DAG(
     # Trigger DAG 2 - Load to DWH
     trigger_dag2 = TriggerDagRunOperator(
         task_id='trigger_load_to_dwh',
-        trigger_dag_id='load_data_to_datawarehouse',
+        trigger_dag_id='Minio_to_Postgres',
         wait_for_completion=True,
         poke_interval=60
     )
@@ -34,4 +34,4 @@ with DAG(
         poke_interval=60
     )
 
-    trigger_dag1 >> trigger_dag2 >> trigger_dag3 
+    trigger_dag1 >> trigger_dag2 >> trigger_dag3
