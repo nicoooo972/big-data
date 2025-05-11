@@ -52,6 +52,9 @@ Cette première étape du pipeline de données se concentre sur la collecte de f
 
 Cette étape assure que les données brutes sont disponibles dans le Data Lake pour les traitements ultérieurs.
 
+<img src="capture/local_data_to_s3.png" alt="dashboard">
+<img src="capture/televersement_to_s3.png" alt="dashboard">
+
 ---
 
 ## 4. Datalake → Data Warehouse (TP2)
@@ -118,6 +121,7 @@ Cette phase du projet se concentre sur la création et le peuplement d'un Data M
 
 Cette modélisation permet des analyses efficaces sur les données de trajets, en facilitant les agrégations et les explorations selon différentes dimensions.
 
+<img src="capture/data_table_postgres.png" alt="dashboard">
 ---
 
 ## 6. Analyse exploratoire & Visualisation (TP4)
@@ -153,6 +157,13 @@ Cette étape du projet, nommée "DataViz", se matérialise par une application w
 * **Interface Utilisateur (Frontend)** :
   * Un tableau de bord interactif qui présente les données analysées sous forme de multiples visualisations (graphiques variés, cartes d'information synthétiques).
   * Affichage dynamique des statistiques, par exemple sur la durée des trajets et l'efficacité tarifaire, grâce aux composants WebAssembly.
+
+<img src="capture/dashboard.png" alt="dashboard">
+<img src="capture/analyse_trajets.png" alt="dashboard">
+<img src="capture/analyse_financiere.png" alt="dashboard">
+<img src="capture/analyse_temporelle.png" alt="dashboard">
+<img src="capture/stats_avancees.png" alt="dashboard">
+
 
 ---
 
@@ -197,6 +208,11 @@ Un DAG maître (`master_dag.py` définissant `master_etl_pipeline`) est responsa
 
 Cette orchestration Airflow assure l'exécution automatisée, ordonnancée et répétable de l'ensemble du pipeline de traitement de données.
 
+
+<img src="capture/pipeline.png" alt="dashboard">
+<img src="capture/migrate_datawarehouse_to_datamart.png" alt="dashboard">
+<img src="capture/minio_to_postgres.png" alt="dashboard">
+<img src="capture/taxi_data_to_minio.png" alt="dashboard">
 ---
 
 ## 8. API Rust pour l'accès aux données
@@ -258,6 +274,8 @@ Au-delà de l'accès et de la visualisation des données métier, assurer et sur
 
 Cette approche proactive de la surveillance de la qualité des données renforce la confiance dans les informations fournies par le système et permet une amélioration continue du pipeline de données.
 
+<img src="capture/qualite_donnees.png" alt="dashboard">
+<img src="capture/qualite_donnees_suite.png" alt="dashboard">
 ---
 
 ## 10. Visualisation et Interface Utilisateur
@@ -275,7 +293,7 @@ Pour interagir avec les données exposées par l'API Rust, une interface utilisa
 
 Cette interface web, propulsée par Rust et WebAssembly, offre une expérience utilisateur réactive pour l'exploration des données de trajets.
 
----
+<img src="capture/flux_trajets.png" alt="dashboard">
 
 ## 11. Conclusion & perspectives
 
