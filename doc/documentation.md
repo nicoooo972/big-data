@@ -79,6 +79,8 @@ Cette étape concerne le transfert des données depuis le Data Lake (Minio S3) v
 * **Inférence de schéma avec plusieurs fichiers Parquet** : Résolu en utilisant `option("mergeSchema", "true")`.
 * **Erreurs dues à des fichiers non-Parquet dans le répertoire S3** : Résolu en spécifiant un chemin avec un glob pattern (`*.parquet`) pour ne lire que les fichiers Parquet.
 
+<img src="capture/data_table_postgres.png" alt="dashboard">
+
 ---
 
 ## 5. Modélisation & Data Mart (TP3)
@@ -121,7 +123,6 @@ Cette phase du projet se concentre sur la création et le peuplement d'un Data M
 
 Cette modélisation permet des analyses efficaces sur les données de trajets, en facilitant les agrégations et les explorations selon différentes dimensions.
 
-<img src="capture/data_table_postgres.png" alt="dashboard">
 ---
 
 ## 6. Analyse exploratoire & Visualisation (TP4)
@@ -210,9 +211,14 @@ Cette orchestration Airflow assure l'exécution automatisée, ordonnancée et r�
 
 
 <img src="capture/pipeline.png" alt="dashboard">
+* Le DAG "Master_etl_pipeline" est l'ochestrateur qui va lancer tous les DAGS
+
 <img src="capture/migrate_datawarehouse_to_datamart.png" alt="dashboard">
+* Le DAG ci-dessus va lancer la migration des données vers le datamart. Pour alléger la migration, on l'effectue par des jeux de 100 000 données par 100 000 et cette methode nous permet de bien suivre l'avancement de la migration.
 <img src="capture/minio_to_postgres.png" alt="dashboard">
+* Ajout des fichiers parquets qui sont stockés dans le minio dans la base de données (Postgres).
 <img src="capture/taxi_data_to_minio.png" alt="dashboard">
+* Téléchargements des fichiers parquets depuis le site internet.
 ---
 
 ## 8. API Rust pour l'accès aux données
