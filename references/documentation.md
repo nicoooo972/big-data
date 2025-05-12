@@ -329,3 +329,6 @@ Ce projet a démontré la mise en place d'un pipeline Big Data complet, du clust
 
 <img src="capture/donnees_datamart.png" alt="donnes">
 *Fig. 19: Aperçu des données dans les tables du Data Mart.*
+
+<img src="capture/minio.png" alt="minio">
+*Fig. 20: Aperçu des fichier parquets dans minio.*
