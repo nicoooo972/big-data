@@ -742,24 +742,6 @@ def migrate_fact_trips(**kwargs):
         logger.info("=====================================")
 
 
-def truncate_source_table(**kwargs):
-    logger.info("Starting truncate_source_table task.")
-    engine = sqlalchemy.create_engine(SRC_CONN)
-    try:
-        with engine.connect() as conn:
-            with conn.begin(): # Use transaction
-                 logger.info("Executing TRUNCATE TABLE yellow_tripdata on source.")
-                 conn.execute(sqlalchemy.text('TRUNCATE TABLE yellow_tripdata'))
-            logger.info("Successfully truncated yellow_tripdata.")
-    except Exception as e:
-        logger.error(f"Error truncating yellow_tripdata: {e}")
-        raise
-    finally:
-        engine.dispose()
-        logger.info("truncate_source_table engine disposed.")
-    logger.info("Finished truncate_source_table task.")
-
-
 with DAG(
     dag_id='migrate_datawarehouse_to_datamart',
     start_date=days_ago(1),
