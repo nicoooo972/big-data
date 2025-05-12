@@ -158,3 +158,6 @@ Le `docker-compose.yml` définit plusieurs services PostgreSQL :
 
 Les identifiants par défaut sont `postgres`/`admin` pour `data-warehouse` et `data-mart`, et `airflow`/`airflow` pour `postgres-airflow`.
 Vous pouvez vous y connecter en utilisant un client PSQL ou un outil d'interface graphique de base de données.
+
+### Visualisation des données
+Vous pouvez visualiser les données à partir du repo suivant : https://github.com/nicoooo972/dashboard-big-data
