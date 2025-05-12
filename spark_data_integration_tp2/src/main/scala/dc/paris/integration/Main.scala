@@ -12,8 +12,8 @@ object Main extends App {
     .builder()
     .appName("Data Integration")
     .master("local[*]")
-    .config("fs.s3a.access.key", "eHoxMB4Zdklb5rsqfXWp") // Clé d'accès S3
-    .config("fs.s3a.secret.key", "fmSPppV2WlokBEfqdKdULQ2MtyFL0U8vXtpkLr6O") // Clé secrète S3
+    .config("fs.s3a.access.key", System.getenv("AWS_ACCESS_KEY_ID")) // Clé d'accès S3
+    .config("fs.s3a.secret.key", System.getenv("AWS_SECRET_ACCESS_KEY")) // Clé secrète S3
     .config("fs.s3a.endpoint", "http://localhost:9000/")
     .config("fs.s3a.path.style.access", "true")
     .config("fs.s3a.connection.ssl.enable", "false")
